@@ -9,7 +9,8 @@ New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 
 - (1) Changed the start order: mute 150 ms before the transient focus. Not fully proven: the player log still shows the target unmuted for about 13 ms when it resumes on the speaker.
 - Crash (found while testing): activity destroyed and recreated while relaying -> native crash in the libusb callback; then the sticky restart crashed. Fixed in `cpp/dl/dllib.cpp`, `cpp/engine/engine.cpp`, `RelayService.onStartCommand`.
 - Verified on the phone (signed release, BTR17, TIDAL 96 kHz): start order in the AudioService log; lock sound -> one automatic re-pin -> speaker route, gaps flat; activity closed and reopened twice while relaying, no crash, relay continues. Build and unit tests pass.
-- Not verified: whether the start (and each re-pin) still leaks audibly (needs a listening test); key-click bursts while typing (debounce logic only reasoned, not run); notification sounds.
+- Listening test (user, 2026-10-25): two restarts, no leak heard from the phone speaker. Player log on resume: unmuted for 0 ms and 3 ms (was 13 to 25 ms). The user accepts the about 5 s silence per re-pin.
+- Not verified: whether a re-pin resume leaks audibly; key-click bursts while typing (debounce logic only reasoned, not run); notification sounds.
 - Helper scripts: `tools/device/stop_relay.sh`, `tools/device/grant_usb.sh`.
 
 ## 2026-10-24 Published on GitHub
