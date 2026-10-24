@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(./gradlew.bat:*)",
+      "Bash(adb:*)",
+      "Bash(git:*)",
+      "WebFetch",
+      "WebSearch"
+    ]
+  }
+}

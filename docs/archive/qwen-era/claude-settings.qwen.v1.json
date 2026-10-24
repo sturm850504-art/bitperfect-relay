@@ -1,0 +1,26 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:11435",
+    "ANTHROPIC_AUTH_TOKEN": "ollama",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "qwen3.8-coding:27b-80k",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "qwen3.8-coding:27b-80k",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "qwen3.8-coding:27b-80k",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "qwen3.8-coding:27b-80k",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "qwen3.8-coding:27b-80k",
+    "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "81920",
+    "API_TIMEOUT_MS": "1800000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(adb:*)",
+      "Bash(git:*)",
+      "WebFetch",
+      "WebSearch"
+    ]
+  }
+}

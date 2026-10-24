@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- MediaProjection: 캡처 -->
+    <!-- RECORD_AUDIO: 다른 앱의 재생 소리를 캡처하는 데 필수 (공식 문서 developer.android.com/media/platform/av-capture 기준) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- WAKE_LOCK: RelayService holds a partial wake lock while relaying (missing before: start crashed). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <!-- USB/BT 출력 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- USB DAC access needs no manifest permission: UsbManager.requestPermission asks at runtime.
+         (android.permission.USB_PERMISSION does not exist; audit defect 21.) -->
+
+    <!-- Battery-optimization exemption request on the first start (Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+         needs this permission). Direct APK distribution, so the Play policy on this permission does not apply. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- 알림 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 패키지 가시성 (Android 11+): 사용자가 입력한 대상 앱을 UID로 조회해야 하므로
+         런처 앱 전체를 가시 대상으로 선언한다. 없으면 getApplicationInfo()가
+         설치되어도 NameNotFoundException을 던진다. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BitPerfectRelay">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.BitPerfectRelay"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".service.RelayService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection|connectedDevice" />
+
+    </application>
+
+</manifest>

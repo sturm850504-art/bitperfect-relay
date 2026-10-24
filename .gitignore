@@ -1,0 +1,41 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# 조사용 임시 자료 (AOSP 소스 트리, 임시 검색 스크립트) — 커밋 제외
+/vendor_tmp/
+/.vendor_tmp/
+/aosp_hardware_google/
+/aosp_system_media/
+/tmp_search.ps1
+/build_stage4.log
+/build-dev.log
+/build-stage6.log
+/default.xml
+
+# 벤더링 소스 다운로드 캐시 (soxr/oboe tarball) — 커밋 제외 (확장된 소스는 app/src/main/cpp/soxr, oboe 에 커밋됨)
+app/src/main/cpp/vendor-dl/
+
+# Test builds handed to testers (binaries, not tracked)
+/dist/
+
+# Release signing material never goes into the repository
+*.jks
+*.keystore
+keystore.properties
+
+# Local-only notes (UAPP analysis) and archives
+/docs/private/
+/*.zip

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BitPerfect Relay</string>
+    <string name="channel_relay">BitPerfect 전송</string>
+    <string name="channel_relay_desc">소스 앱 → 출력 장치 전송 상태</string>
+    <string name="notif_relay_stop">정지</string>
+
+    <!-- Stage 7: 메인 화면 -->
+    <string name="ui_title">BitPerfect Relay</string>
+    <string name="ui_engine">Engine: %1$s</string>
+    <string name="ui_app_select">앱 선택</string>
+    <string name="ui_app_add_title">앱 추가</string>
+    <string name="ui_app_add_empty">추가할 앱이 없습니다</string>
+    <string name="ui_app_add_close">닫기</string>
+    <string name="ui_app_delete">삭제</string>
+    <string name="ui_app_delete_title">앱 삭제</string>
+    <string name="ui_app_delete_msg">“%1$s”을(를) 리스트에서 삭제할까요?</string>
+    <string name="ui_app_delete_confirm">삭제</string>
+    <string name="ui_app_delete_cancel">취소</string>
+    <string name="ui_app_selected">선택됨</string>
+    <string name="ui_app_unselected">미선택</string>
+    <string name="ui_app_capture_blocked">캡처 차단</string>
+    <string name="ui_app_row">%1$s, %2$s</string>
+    <string name="ui_app_row_blocked">%1$s, %2$s, %3$s</string>
+    <string name="ui_app_rate_desc">샘플레이트 %1$s</string>
+    <string name="ui_output_name_rate">%1$s · %2$s</string>
+
+    <string name="ui_output">출력장치</string>
+    <string name="ui_output_use">사용</string>
+    <string name="ui_output_use_locked">사용 (재생 중에는 바꿀 수 없음)</string>
+    <string name="ui_output_none">없음</string>
+
+    <string name="ui_usb_uac">UAC %1$s</string>
+    <string name="ui_usb_power_phone">휴대폰 전원</string>
+    <string name="ui_usb_power_battery">내장 배터리</string>
+    <string name="ui_usb_format">%1$dbit/%2$s</string>
+    <string name="ui_usb_format_dsd">%1$s · DSD</string>
+    <string name="ui_usb_device">%1$s, %2$s, %3$s</string>
+    <string name="ui_usb_device_full">%1$s, %2$s, %3$s, %4$s</string>
+
+
+    <string name="ui_start">시작</string>
+    <string name="ui_stop">정지</string>
+    <string name="ui_status_ready">대기 중</string>
+    <string name="ui_status_denied">권한 거부 — 출력 장치를 다시 선택하세요</string>
+    <string name="ui_status_usb_on">재생 시작: %1$s %2$d Hz → USB DAC</string>
+    <string name="ui_status_usb_fail">USB DAC 시작 실패 → 자동 정지: %1$s</string>
+    <string name="ui_status_usb_error">USB 오류 → 자동 정지: %1$s</string>
+    <string name="ui_status_usb_open_fail">USB DAC를 열 수 없음 (분리됐거나 권한 없음)</string>
+    <string name="ui_status_need_app">대상 앱을 선택하세요</string>
+    <string name="ui_status_need_output">출력 장치의 사용 스위치를 켜세요</string>
+    <string name="ui_status_usb_perm">USB 권한을 허용하세요</string>
+    <string name="ui_status_usb_gone">선택한 USB 장치가 연결되어 있지 않습니다</string>
+    <string name="ui_status_perm">권한이 필요합니다: 녹음(RECORD_AUDIO), 알림</string>
+    <string name="ui_status_stop_req">정지 요청됨</string>
+    <string name="ui_status_capture_error">캡처 오류 → 자동 정지 (코드 %1$d)</string>
+    <string name="notif_relay_title">BitPerfect 전송 중</string>
+
+    <!-- Volume (2026-10-24) -->
+    <string name="ui_volume_title">볼륨</string>
+    <string name="ui_volume_up">볼륨 올리기</string>
+    <string name="ui_volume_down">볼륨 내리기</string>
+    <string name="ui_volume_db">%1$.1f dB</string>
+    <string name="ui_volume_pct">%1$d%% (비트퍼펙트 아님)</string>
+    <string name="ui_volume_hw_note">DAC 하드웨어 볼륨 (비트퍼펙트 유지)</string>
+    <string name="ui_volume_slider">볼륨 %1$s</string>
+    <string name="ui_volume_none">이 DAC는 하드웨어 볼륨이 없습니다. 설정에서 디지털 볼륨을 켤 수 있습니다 (비트퍼펙트 아님). 다음 시작부터 적용됩니다.</string>
+    <string name="ui_capture_silent_hint">5초째 캡처된 소리가 없습니다. 음악이 재생 중인데도 이 문구가 보이면 이 앱이 캡처를 막는 것일 수 있습니다 (예: Spotify).</string>
+
+    <!-- Diagnostics (2026-10-24) -->
+    <string name="ui_diag_open">진단 정보</string>
+    <string name="ui_diag_title">진단 정보</string>
+    <string name="ui_diag_copy">복사</string>
+    <string name="ui_diag_close">닫기</string>
+    <string name="ui_diag_copied">복사했습니다. 메신저에 붙여 넣으세요.</string>
+
+    <!-- Settings: digital volume (2026-10-24) -->
+    <string name="ui_digital_volume">디지털 볼륨 (비트퍼펙트 아님)</string>
+    <string name="ui_digital_volume_desc">하드웨어 볼륨이 없는 DAC에서만 쓸 수 있습니다. 켜면 앱이 소리 크기를 직접 바꾸므로 비트퍼펙트가 아닙니다. 다음 시작부터 적용됩니다.</string>
+    <string name="ui_digital_volume_hw">연결된 DAC는 하드웨어 볼륨이 있어 디지털 볼륨을 쓰지 않습니다.</string>
+    <string name="ui_digital_volume_nodac">DAC를 연결하고 USB 권한을 허용하면 설정할 수 있습니다.</string>
+
+    <!-- Stage 9: 설정 화면 + 라이브러리 -->
+    <string name="ui_settings_open">설정</string>
+    <string name="ui_settings_title">설정</string>
+    <string name="ui_settings_back">뒤로</string>
+    <string name="ui_settings_about">이 앱은 다른 앱의 오디오를 캡처해 USB DAC로 그대로(무처리) 전달합니다.</string>
+    <string name="ui_libs_title">라이브러리</string>
+    <string name="ui_libs_swappable">로컬 로드 대상</string>
+    <string name="ui_libs_readonly">읽기 전용</string>
+    <string name="ui_libs_local">로컬 후보</string>
+    <string name="ui_libs_local_empty">로컬 후보 .so가 없습니다.\nfiles/libs/&lt;이름&gt;/&lt;버전&gt;/&lt;ABI&gt;/ 에 .so를 넣으면 여기에 표시됩니다.</string>
+    <string name="ui_libs_sha">SHA-256: %1$s</string>
+    <string name="ui_libs_selected">기록됨: %1$s</string>
+    <string name="ui_libs_no_swap">로컬 로드 대상 아님 (관리 대상)</string>
+    <string name="ui_libs_selected_hint">선택 즉시 dlopen 교체로 적용됩니다. 로드 실패 시 이전 버전으로 자동 복원됩니다.</string>
+    <string name="ui_libs_apply_ok">적용됨: %1$s</string>
+    <string name="ui_libs_apply_fail">적용 실패 — %1$s</string>
+    <string name="ui_libs_fail_unknown">오류 없음</string>
+    <string name="ui_libs_revert">기본 번들(libusb/soxr 번들)로 복원</string>
+    <string name="ui_relay_app">재생 중: %1$s</string>
+    <string name="ui_status_rate_change">샘플레이트 변경 중: %1$s</string>
+    <string name="ui_status_rate_fail">샘플레이트 변경 실패 (%1$d Hz) → 정지</string>
+    <string name="ui_viz_desc">시각화, %1$s, 색 %2$s. 좌우로 밀면 형태, 위아래로 밀면 색이 바뀝니다.</string>
+    <string name="ui_viz_footer">%1$s · %2$s · 지연 약 %3$dms</string>
+    <string name="ui_viz_next_mode">다음 시각화 형태</string>
+    <string name="ui_viz_prev_mode">이전 시각화 형태</string>
+    <string name="ui_viz_next_color">다음 색</string>
+    <string name="ui_viz_settings">시각화 설정</string>
+    <string name="ui_viz_custom">사용자</string>
+    <string name="ui_viz_preset">색 프리셋</string>
+    <string name="ui_viz_custom_edit">사용자 색 편집</string>
+    <string name="ui_viz_custom_hint">고친 색은 사용자 프리셋에 저장되고 바로 적용됩니다.</string>
+    <string name="ui_viz_hue">색상 %1$d도</string>
+    <string name="ui_viz_saturation">채도 %1$d%%</string>
+    <string name="ui_viz_brightness">밝기 %1$d%%</string>
+    <string name="ui_viz_needle">VU 바늘 반응 시간 %1$.1f초</string>
+    <string name="ui_viz_needle_hint">길수록 바늘이 묵직하고 늦게 따라옵니다. 실제 VU 규격은 0.3초입니다.</string>
+    <string name="ui_viz_sync">화면 싱크 보정 %1$+dms</string>
+    <string name="ui_viz_sync_hint">화면은 DAC로 나가는 시점에 맞춰 그립니다. 블루투스처럼 뒤에 지연이 더 있으면 값을 올리고, 화면이 늦어 보이면 내리세요.</string>
+    <string name="ui_close">닫기</string>
+    <string-array name="viz_color_slots">
+        <item>배경</item>
+        <item>왼쪽</item>
+        <item>오른쪽</item>
+        <item>강조</item>
+        <item>글자</item>
+        <item>미터판</item>
+        <item>바늘</item>
+    </string-array>
+    <string-array name="viz_modes">
+        <item>흐르는 파형</item>
+        <item>오실로스코프</item>
+        <item>스펙트럼</item>
+        <item>벡터스코프</item>
+        <item>VU 미터</item>
+    </string-array>
+    <string-array name="viz_presets">
+        <item>앰버</item>
+        <item>빈티지</item>
+        <item>그린</item>
+        <item>아이스 블루</item>
+        <item>네온</item>
+        <item>모노</item>
+    </string-array>
+    <string name="ui_libs_note">로컬 .so는 동일한 안정 C ABI(동일 함수 시그니처·불투명 핸들)를 노출해야 합니다. GitHub 다운로드는 비활성(저장소 미제공). SHA-256은 로컬 무결성 지문이며 외부 서명이 아닙니다.</string>
+</resources>
