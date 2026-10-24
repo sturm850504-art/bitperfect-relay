@@ -2,6 +2,12 @@
 
 New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 2026-10-11): `docs/archive/qwen-era/PROGRESS.qwen.md` (claims unverified).
 
+## 2026-10-25 Version 0.1.1
+
+- Listening test (user): relay start, three track changes and one lock-sound re-pin (player log unmuted windows 15, 6, 12, 10, 0 ms): no leak heard on the phone speaker. With the stop test, every leak point of the defined flow is checked except a DAC unplug while relaying and a rate change.
+- `versionCode` 2, `versionName` 0.1.1 [AI judgment: bug-fix release of the published app]. Signed release APK copied to the PC Downloads folder (`BitPerfectRelay-0.1.1-release.apk` and `.zip`, SHA-256 64eb52d07cca7c92...). The phone runs the same code built as 0.1.0 (only the version differs).
+- Next: GitHub release for 0.1.1 if the user wants one; DAC unplug and rate change leak checks when convenient.
+
 ## 2026-10-25 Stop leak; DAC lost during start; leak-point audit
 
 - User report: a short leak on the phone speaker when stopping from the app. Device log of that stop: unmute at 08:30:29.37 while TIDAL still played on the speaker, unmuted about 0.1 s. `awaitMediaRouteOffSpeaker` cannot see other apps' playback devices (hidden from ordinary apps), so it passed. Fix (`RelayService.stopUsb`, used by every stop path: app button, notification, projection revoke, errors): transient focus pauses the target, DAC back, anchor stop, wait for the route off the speaker and for no music (`isMusicActive`, 3 s cap), unmute, give focus back; the relay's own focus is now abandoned after `stopUsb`.
