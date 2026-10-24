@@ -6,7 +6,8 @@ New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 
 
 - Listening test (user): relay start, three track changes and one lock-sound re-pin (player log unmuted windows 15, 6, 12, 10, 0 ms): no leak heard on the phone speaker. With the stop test, every leak point of the defined flow is checked except a DAC unplug while relaying and a rate change.
 - `versionCode` 2, `versionName` 0.1.1 [AI judgment: bug-fix release of the published app]. Signed release APK copied to the PC Downloads folder (`BitPerfectRelay-0.1.1-release.apk` and `.zip`, SHA-256 64eb52d07cca7c92...). The phone runs the same code built as 0.1.0 (only the version differs).
-- Next: GitHub release for 0.1.1 if the user wants one; DAC unplug and rate change leak checks when convenient.
+- GitHub release v0.1.1 published (https://github.com/sturm850504-art/bitperfect-relay/releases/tag/v0.1.1), asset digest matches the APK.
+- Next: DAC unplug and rate change leak checks when convenient.
 
 ## 2026-10-25 Stop leak; DAC lost during start; leak-point audit
 
