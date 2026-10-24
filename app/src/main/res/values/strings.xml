@@ -46,6 +46,7 @@
     <string name="ui_status_usb_on">재생 시작: %1$s %2$d Hz → USB DAC</string>
     <string name="ui_status_usb_fail">USB DAC 시작 실패 → 자동 정지: %1$s</string>
     <string name="ui_status_usb_error">USB 오류 → 자동 정지: %1$s</string>
+    <string name="ui_status_repin_fail">시스템 소리 뒤 음악 출력을 스피커 쪽으로 되돌리지 못했습니다. 소리가 끊기면 정지 후 다시 시작해 주세요.</string>
     <string name="ui_status_usb_open_fail">USB DAC를 열 수 없음 (분리됐거나 권한 없음)</string>
     <string name="ui_status_need_app">대상 앱을 선택하세요</string>
     <string name="ui_status_need_output">출력 장치의 사용 스위치를 켜세요</string>

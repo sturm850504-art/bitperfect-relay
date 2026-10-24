@@ -2,6 +2,16 @@
 
 New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 2026-10-11): `docs/archive/qwen-era/PROGRESS.qwen.md` (claims unverified).
 
+## 2026-10-25 Bug fixes: system sounds break the relay, start leak, crash on activity recreate
+
+- User reports: (1) brief leak on the phone speaker when starting; (2) after a system sound (lock, key clicks) the music plays half and breaks up until restart.
+- (2) Reproduced over adb (lock sound): the media output moved from the speaker back to the claimed USB route, `zeroGaps` rose steadily. Cause and re-pin method in `docs/ref/usb-dac.md` (2026-10-25). Changed: `service/SpeakerAnchor.kt` (route listener, `onSpeaker`), `service/RelayService.kt` (detect, debounce, re-pin by giving the DAC back and claiming it again; also a check 2 s after the start; gives up after 3 tries with a diagnostics note), `strings.xml`.
+- (1) Changed the start order: mute 150 ms before the transient focus. Not fully proven: the player log still shows the target unmuted for about 13 ms when it resumes on the speaker.
+- Crash (found while testing): activity destroyed and recreated while relaying -> native crash in the libusb callback; then the sticky restart crashed. Fixed in `cpp/dl/dllib.cpp`, `cpp/engine/engine.cpp`, `RelayService.onStartCommand`.
+- Verified on the phone (signed release, BTR17, TIDAL 96 kHz): start order in the AudioService log; lock sound -> one automatic re-pin -> speaker route, gaps flat; activity closed and reopened twice while relaying, no crash, relay continues. Build and unit tests pass.
+- Not verified: whether the start (and each re-pin) still leaks audibly (needs a listening test); key-click bursts while typing (debounce logic only reasoned, not run); notification sounds.
+- Helper scripts: `tools/device/stop_relay.sh`, `tools/device/grant_usb.sh`.
+
 ## 2026-10-24 Published on GitHub
 
 - Public repository: https://github.com/sturm850504-art/bitperfect-relay (MIT; libusb LGPL 2.1 with its COPYING and AUTHORS). Started from one fresh commit; the full earlier history stays in the local branch `local-full-history` (not pushed). Author is the GitHub noreply address (repo-local git config).

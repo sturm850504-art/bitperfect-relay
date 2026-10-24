@@ -19,6 +19,7 @@ import android.media.AudioFormat
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioPlaybackCaptureConfiguration
+import android.media.AudioPlaybackConfiguration
 import android.media.AudioRecord
 import android.media.VolumeProvider
 import android.media.projection.MediaProjection
@@ -74,6 +75,11 @@ class RelayService : android.app.Service() {
         const val TAG = "BitPerfect"
         // [AI judgment] AOSP AudioFlinger closes an idle output after 3 s (kDefaultStandbyTimeInNsecs).
         private const val ANCHOR_SETTLE_MS = 3500L
+        private const val MUTE_SETTLE_MS = 150L
+        // Re-pin: wait until no sound has started or stopped for this long, then re-pin; check the result.
+        private const val REPIN_DEBOUNCE_MS = 2000L
+        private const val REPIN_VERIFY_MS = 2000L
+        private const val REPIN_MAX_TRIES = 3
         private const val CHANNEL_ID = "relay"
         private const val NOTIF_ID = 1
         private const val VOLUME_PRIORITY_MS = 1000L
@@ -158,6 +164,10 @@ class RelayService : android.app.Service() {
     @Volatile private var pendingRate = 0
     /** The relayed DAC was unplugged: [stopUsb] pauses the target before unmuting. */
     @Volatile private var detached = false
+    // Re-pin of the media output to the speaker: due time (0 = none) and failed tries in a row.
+    @Volatile private var repinAt = 0L
+    @Volatile private var repinTries = 0
+    private var playbackCallback: AudioManager.AudioPlaybackCallback? = null
     // Pins the media output to the speaker while we own the DAC (see SpeakerAnchor).
     private val speakerAnchor by lazy { SpeakerAnchor(this) }
     private var usbDetachReceiver: BroadcastReceiver? = null
@@ -211,6 +221,13 @@ class RelayService : android.app.Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLog.i(TAG, "RelayService onStartCommand action=${intent?.action}")
+        if (intent == null) {
+            // Restarted by the system after the process died: the projection token is gone, so
+            // nothing can resume, and a typed startForeground would throw (crash 2026-10-25).
+            MediaMute.restoreAfterCrash(this)
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         when (intent?.action) {
             ACTION_STOP -> {
@@ -235,7 +252,7 @@ class RelayService : android.app.Service() {
         // Stage 7: ACTION_START (production) and ACTION_CAPTURE_TEST (legacy test UI) share the path
         if (intent != null && (intent.action == ACTION_START || intent.action == ACTION_CAPTURE_TEST)) {
             startRelay(intent)
-            return START_STICKY
+            return START_NOT_STICKY
         }
 
         // 기본: 대기
@@ -343,6 +360,11 @@ class RelayService : android.app.Service() {
                     // DAC's kernel driver. With the target still playing the output stays on the USB
                     // route and the capture breaks up (device test 2026-10-11; UAPP takes focus too).
                     val am = getSystemService(AudioManager::class.java)
+                    // Mute first, while the target still plays on the working USB route, so its track is
+                    // muted before it pauses and later resumes on the speaker (device log 2026-10-25).
+                    detached = false
+                    MediaMute.engage(this@RelayService)
+                    delay(MUTE_SETTLE_MS)
                     focus = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                         .setAudioAttributes(
                             AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
@@ -353,10 +375,22 @@ class RelayService : android.app.Service() {
                     if (am.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                         AppLog.w(TAG, "transient audio focus not granted")
                     }
-                    detached = false
-                    // Mute before moving the output: the target fades out on the speaker while pausing.
-                    MediaMute.engage(this@RelayService)
-                    speakerAnchor.start()
+                    repinAt = 0L
+                    repinTries = 0
+                    playbackCallback = object : AudioManager.AudioPlaybackCallback() {
+                        override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>) {
+                            // A sound started or stopped (key clicks while typing): postpone a pending re-pin.
+                            if (repinAt != 0L) repinAt = SystemClock.elapsedRealtime() + REPIN_DEBOUNCE_MS
+                        }
+                    }.also { am.registerAudioPlaybackCallback(it, mainHandler) }
+                    speakerAnchor.start { onSpeaker ->
+                        if (onSpeaker) {
+                            repinTries = 0
+                        } else if (relayingState.value) {
+                            repinAt = SystemClock.elapsedRealtime() + REPIN_DEBOUNCE_MS
+                            AppLog.w(TAG, "media output left the speaker")
+                        }
+                    }
                     delay(ANCHOR_SETTLE_MS)
                     val opened = openUsbById(getSystemService(USB_SERVICE) as UsbManager, outputId)
                     val reason = if (opened == null) {
@@ -378,6 +412,8 @@ class RelayService : android.app.Service() {
                 audioRecord?.startRecording()
                 AppLog.i(TAG, if (tone) "test tone ${sampleRate} Hz for $toneSec s" else "음성 기록 시작")
                 relayingState.value = true
+                // The capture start decides the route; check it once the policy has settled.
+                if (usbOut != null) repinAt = SystemClock.elapsedRealtime() + REPIN_VERIFY_MS
                 // Give focus back: the target app resumes, now on the speaker route (muted).
                 focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }
                 if (usbOut != null) {
@@ -408,6 +444,24 @@ class RelayService : android.app.Service() {
                     val n = read(floatBuffer)
                     if (n > 0) RelayMeter.push(floatBuffer, n)
                     val now = SystemClock.elapsedRealtime()
+                    val due = repinAt
+                    if (due != 0L && now >= due && audioRecord != null && usbOut != null) {
+                        repinAt = 0L
+                        if (speakerAnchor.onSpeaker()) {
+                            repinTries = 0
+                        } else if (repinTries < REPIN_MAX_TRIES) {
+                            repinTries++
+                            if (!repinMediaOutput(audioRecord!!, focus, outputId!!)) {
+                                failReason = getString(R.string.ui_status_usb_open_fail)
+                                break
+                            }
+                            repinAt = SystemClock.elapsedRealtime() + REPIN_VERIFY_MS
+                        } else if (repinTries == REPIN_MAX_TRIES) {
+                            repinTries++
+                            AppLog.e(TAG, "media output stays off the speaker after $REPIN_MAX_TRIES re-pins")
+                            Diagnostics.lastFailure = getString(R.string.ui_status_repin_fail)
+                        }
+                    }
                     if (now - meterAt >= 250) {
                         meterAt = now
                         RelayMeter.delayMs = usbOut?.bufferedMs() ?: 0
@@ -448,6 +502,8 @@ class RelayService : android.app.Service() {
                 AppLog.e(TAG, "기록 루프 예외: ${e.message}", e)
                 failReason = getString(R.string.ui_status_usb_error, e.toString())
             } finally {
+                playbackCallback?.let { getSystemService(AudioManager::class.java).unregisterAudioPlaybackCallback(it) }
+                playbackCallback = null
                 mainHandler.post { stopVolumeSession() }
                 focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }
                 runCatching { wavWriter?.close() }  // close() 가 WAV 헤더를 확정한다
@@ -467,6 +523,48 @@ class RelayService : android.app.Service() {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
+        }
+    }
+
+    /**
+     * Moves the media output back to the speaker after the system pulled it to the claimed USB route
+     * (there the capture gets silence gaps: half the music). Any routing re-evaluation while the
+     * target plays picks USB (AOSP honors an explicit route only while no default-routed client is
+     * active), and the end of each system sound on the USB route triggers one (device log 2026-10-25).
+     * Pausing the target alone does not help: on the dead route its pause never completes in the
+     * policy. So this repeats the start: pause the target, give the DAC back (the route works again
+     * and the pause completes), wait, claim it again, restart the capture (its remote-submix device
+     * reconnects, the policy re-routes with only the anchor active, the speaker wins), resume.
+     * The target stays muted throughout; the DAC is silent for about five seconds.
+     * False if the DAC could not be started again.
+     */
+    private suspend fun repinMediaOutput(rec: AudioRecord, focus: AudioFocusRequest?, outputId: String): Boolean {
+        AppLog.w(TAG, "re-pinning the media output to the speaker (try $repinTries)")
+        val am = getSystemService(AudioManager::class.java)
+        if (focus != null && am.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            AppLog.w(TAG, "re-pin: transient audio focus not granted")
+        }
+        try {
+            val rate = relayRateState.value
+            usbOut?.let {
+                usbOut = null
+                it.stop()
+            }
+            mainHandler.post { stopVolumeSession() }
+            delay(ANCHOR_SETTLE_MS)
+            val opened = openUsbById(getSystemService(USB_SERVICE) as UsbManager, outputId) ?: return false
+            val out = UsbDacOutput(this, opened.first, opened.second)
+            if (!out.start(rate, digitalVolume = AppSettings(this).digitalVolume.value)) {
+                AppLog.e(TAG, "re-pin: USB start failed: ${out.lastError}")
+                return false
+            }
+            usbOut = out
+            mainHandler.post { startVolumeSession() }
+            rec.stop()
+            rec.startRecording()
+            return true
+        } finally {
+            focus?.let { am.abandonAudioFocusRequest(it) }
         }
     }
 

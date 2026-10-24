@@ -72,6 +72,9 @@ int engine_apply_lib(const char* key, const char* path) {
         engine_native_log(4, BP_TAG, "engine_apply_lib: null key or path");
         return -1;
     }
+    // Same library already loaded: nothing to swap, keep a running relay untouched.
+    const char* loaded = dllib_loaded_path(key);
+    if (loaded != nullptr && std::string(loaded) == path) return 0;
     usbplay_close();        // cancels transfers, joins the pump, closes libusb and its context
 
     BP_LOGI("engine_apply_lib(%s): quiesced, swapping to %s", key, path);

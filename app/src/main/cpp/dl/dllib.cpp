@@ -106,6 +106,9 @@ extern "C" {
 
 int dllib_init(const char* nativeLibDir) {
     std::lock_guard<std::mutex> lock(g_lock);
+    // Already bound: the activity can be recreated while the relay streams, and reloading
+    // would clear the table under the libusb event thread (null call, crash 2026-10-25).
+    if (g_usb.handle != nullptr) return 0;
     std::string base = nativeLibDir ? nativeLibDir : "";
     std::string usbPath = base.empty() ? "libusb.so" : base + "/libusb.so";
 
