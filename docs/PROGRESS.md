@@ -6,7 +6,7 @@ New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 
 
 - User (after testing key clicks): recovery works, but the sound broke up for about a second before the silence; proposed holding buffered data instead of sending it. Agreed form (user chose it): on "media output left the speaker" pause the target at once (transient focus) and stop sending new capture to the DAC; the DAC plays out what it already has, then silence until the re-pin; the target resumes where it paused. If the route comes back by itself, the hold ends without a re-pin. `service/RelayService.kt` (`holding`).
 - Verified on the phone (release, BTR17, TIDAL): lock sound -> hold and TIDAL paused within 1 ms -> re-pin -> resumed. Key burst (24 taps in the Settings search field over 2 s): the route stayed on the speaker while keys kept sounding and broke 0.25 s after the last key; hold at once, re-pin 2.2 s later, resumed 8.5 s after the break; gaps counter flat afterwards. Each run: one underrun (the planned silence).
-- Not verified by ear: whether the break-to-silence edge sounds clean.
+- Listening test (user, KakaoTalk typing, 2026-10-25): no broken sound before the silence; the resume skips little and sounds fine. Still not tested: notification sounds.
 
 ## 2026-10-25 Bug fixes: system sounds break the relay, start leak, crash on activity recreate
 
