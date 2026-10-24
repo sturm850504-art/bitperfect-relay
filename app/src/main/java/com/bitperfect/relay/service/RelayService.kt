@@ -167,6 +167,8 @@ class RelayService : android.app.Service() {
     // Re-pin of the media output to the speaker: due time (0 = none) and failed tries in a row.
     @Volatile private var repinAt = 0L
     @Volatile private var repinTries = 0
+    // The media output left the speaker: the target is paused and new capture is not sent to the DAC.
+    @Volatile private var holding = false
     private var playbackCallback: AudioManager.AudioPlaybackCallback? = null
     // Pins the media output to the speaker while we own the DAC (see SpeakerAnchor).
     private val speakerAnchor by lazy { SpeakerAnchor(this) }
@@ -377,6 +379,7 @@ class RelayService : android.app.Service() {
                     }
                     repinAt = 0L
                     repinTries = 0
+                    holding = false
                     playbackCallback = object : AudioManager.AudioPlaybackCallback() {
                         override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>) {
                             // A sound started or stopped (key clicks while typing): postpone a pending re-pin.
@@ -388,7 +391,14 @@ class RelayService : android.app.Service() {
                             repinTries = 0
                         } else if (relayingState.value) {
                             repinAt = SystemClock.elapsedRealtime() + REPIN_DEBOUNCE_MS
-                            AppLog.w(TAG, "media output left the speaker")
+                            if (!holding) {
+                                // From here the capture has gaps (user, 2026-10-25: go quiet at once instead).
+                                // Pause the target so the song does not run on; the DAC plays out what it
+                                // already has (captured before the break), then silence until the re-pin.
+                                holding = true
+                                focus?.let { am.requestAudioFocus(it) }
+                                AppLog.w(TAG, "media output left the speaker; holding")
+                            }
                         }
                     }
                     delay(ANCHOR_SETTLE_MS)
@@ -449,6 +459,11 @@ class RelayService : android.app.Service() {
                         repinAt = 0L
                         if (speakerAnchor.onSpeaker()) {
                             repinTries = 0
+                            if (holding) {
+                                holding = false
+                                focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }
+                                AppLog.i(TAG, "media output back on the speaker by itself; resumed")
+                            }
                         } else if (repinTries < REPIN_MAX_TRIES) {
                             repinTries++
                             if (!repinMediaOutput(audioRecord!!, focus, outputId!!)) {
@@ -478,6 +493,7 @@ class RelayService : android.app.Service() {
                     totalFrames += (n / 2)
                     val usb = usbOut
                     if (usb != null) {
+                        if (holding) continue
                         if (!usb.write(floatBuffer, n)) {
                             // A stop in progress is not an error.
                             if (usb !== usbOut || !isActive) continue
@@ -564,6 +580,7 @@ class RelayService : android.app.Service() {
             rec.startRecording()
             return true
         } finally {
+            holding = false
             focus?.let { am.abandonAudioFocusRequest(it) }
         }
     }
