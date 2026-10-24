@@ -2,6 +2,13 @@
 
 New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 2026-10-11): `docs/archive/qwen-era/PROGRESS.qwen.md` (claims unverified).
 
+## 2026-10-25 Stop leak; DAC lost during start; leak-point audit
+
+- User report: a short leak on the phone speaker when stopping from the app. Device log of that stop: unmute at 08:30:29.37 while TIDAL still played on the speaker, unmuted about 0.1 s. `awaitMediaRouteOffSpeaker` cannot see other apps' playback devices (hidden from ordinary apps), so it passed. Fix (`RelayService.stopUsb`, used by every stop path: app button, notification, projection revoke, errors): transient focus pauses the target, DAC back, anchor stop, wait for the route off the speaker and for no music (`isMusicActive`, 3 s cap), unmute, give focus back; the relay's own focus is now abandoned after `stopUsb`.
+- Found in the logs: when the DAC vanished during a start (BTR17 went off), the cleanup took the normal path and restored the saved level onto the speaker (speaker 9, DAC left at 2). Now a failed relay checks whether its DAC is gone (`relayDevice`, `awaitUsbGone`) and then takes the detach path. The DAC level was set back to 9 by adb; the speaker music level is still 9 (was 4 before).
+- Audit run (release, BTR17, TIDAL; start, lock-sound re-pin, two track changes, stop), target unmuted windows from the AudioService player log: start resume 19 ms, re-pin resume 17 ms, new player at a track change 5 to 6 ms (all on the speaker output, then portVolume), stop: none on the speaker (unmuted only after the target was paused and moved to the DAC). Earlier starts: 0, 3, 13 ms; the user heard no leak at two starts.
+- Not verified: whether the 5 to 19 ms windows are audible at a track change or a re-pin; DAC unplug while relaying (needs the user); rate change.
+
 ## 2026-10-25 Hold at once when the route breaks
 
 - User (after testing key clicks): recovery works, but the sound broke up for about a second before the silence; proposed holding buffered data instead of sending it. Agreed form (user chose it): on "media output left the speaker" pause the target at once (transient focus) and stop sending new capture to the DAC; the DAC plays out what it already has, then silence until the re-pin; the target resumes where it paused. If the route comes back by itself, the hold ends without a re-pin. `service/RelayService.kt` (`holding`).

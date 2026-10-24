@@ -164,6 +164,8 @@ class RelayService : android.app.Service() {
     @Volatile private var pendingRate = 0
     /** The relayed DAC was unplugged: [stopUsb] pauses the target before unmuting. */
     @Volatile private var detached = false
+    // The DAC of this relay, kept after a failed start so the cleanup can tell an unplug.
+    private var relayDevice: UsbDevice? = null
     // Re-pin of the media output to the speaker: due time (0 = none) and failed tries in a row.
     @Volatile private var repinAt = 0L
     @Volatile private var repinTries = 0
@@ -403,6 +405,7 @@ class RelayService : android.app.Service() {
                     }
                     delay(ANCHOR_SETTLE_MS)
                     val opened = openUsbById(getSystemService(USB_SERVICE) as UsbManager, outputId)
+                    relayDevice = opened?.first
                     val reason = if (opened == null) {
                         getString(R.string.ui_status_usb_open_fail)
                     } else {
@@ -521,9 +524,13 @@ class RelayService : android.app.Service() {
                 playbackCallback?.let { getSystemService(AudioManager::class.java).unregisterAudioPlaybackCallback(it) }
                 playbackCallback = null
                 mainHandler.post { stopVolumeSession() }
-                focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }
                 runCatching { wavWriter?.close() }  // close() 가 WAV 헤더를 확정한다
+                // A DAC that vanishes during the start or a re-pin fails there before the detach
+                // broadcast; without this the saved level went to the speaker (device log 2026-10-25).
+                if (failReason != null && !detached) relayDevice?.let { if (awaitUsbGone(it)) detached = true }
                 stopUsb()
+                // After stopUsb: if a hold paused the target, it must not resume on the muted speaker first.
+                focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }
                 captureSilentState.value = false
                 try { audioRecord?.stop() } catch (_: Exception) {}
                 audioRecord?.release()
@@ -809,6 +816,26 @@ class RelayService : android.app.Service() {
             stopAfterDetach()
             return
         }
+        val am = getSystemService(AudioManager::class.java)
+        val anchored = speakerAnchor.isRunning()
+        // The target still plays on the muted speaker. Pause it for the hand-back: unmuted while its
+        // track was still on the speaker, it leaked there for about 0.1 s (user report and device
+        // log 2026-10-25). Other apps' playback devices are hidden from us, so wait for no music.
+        val hold = if (anchored) {
+            val f = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                .setAudioAttributes(
+                    AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(),
+                )
+                .setOnAudioFocusChangeListener { }
+                .build()
+            if (am.requestAudioFocus(f) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                f
+            } else {
+                AppLog.w(TAG, "stop: transient audio focus not granted")
+                null
+            }
+        } else null
         usbOut?.let {
             usbOut = null
             it.stop()
@@ -817,10 +844,23 @@ class RelayService : android.app.Service() {
         // MediaMute set the USB device's index at engage, so restore only after the media route
         // has left the anchored speaker; restoring first put the saved index on the speaker and
         // left the USB DAC at 2 (device test 2026-10-24).
-        val anchored = speakerAnchor.isRunning()
         speakerAnchor.stop()
-        if (anchored) awaitMediaRouteOffSpeaker()
+        if (anchored) {
+            awaitMediaRouteOffSpeaker()
+            val start = SystemClock.elapsedRealtime()
+            while (am.isMusicActive && SystemClock.elapsedRealtime() - start < DETACH_STOP_TIMEOUT_MS) {
+                Thread.sleep(50)
+            }
+            if (am.isMusicActive) {
+                // [AI judgment] An app that ignores focus would otherwise keep the phone muted for good.
+                AppLog.w(TAG, "stop: music still active after $DETACH_STOP_TIMEOUT_MS ms; unmuting anyway")
+            } else {
+                AppLog.i(TAG, "stop: no music playing after ${SystemClock.elapsedRealtime() - start} ms")
+            }
+        }
         MediaMute.release(this)
+        // The target resumes on the default route, the DAC now back with the system.
+        hold?.let { am.abandonAudioFocusRequest(it) }
     }
 
     /**
