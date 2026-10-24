@@ -7,6 +7,7 @@ New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 
 - Public repository: https://github.com/sturm850504-art/bitperfect-relay (MIT; libusb LGPL 2.1 with its COPYING and AUTHORS). Started from one fresh commit; the full earlier history stays in the local branch `local-full-history` (not pushed). Author is the GitHub noreply address (repo-local git config).
 - Kept local only (`docs/private/`, git-ignored): the UAPP analysis notes; code comments and docs no longer mention decompiled sources.
 - README credits the Producer dk YouTube channel as the inspiration (user request), stating no affiliation.
+- Release v0.1.0 with the signed APK: https://github.com/sturm850504-art/bitperfect-relay/releases/tag/v0.1.0 (APK SHA-256 cc317df4...c93d, matches the uploaded asset digest; built from main).
 
 ## 2026-10-24 Signed release build
 
