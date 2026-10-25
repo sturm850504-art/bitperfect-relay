@@ -2,6 +2,11 @@
 
 New entries: prepend below this line (top of file). Qwen-era log (2026-10-05 to 2026-10-11): `docs/archive/qwen-era/PROGRESS.qwen.md` (claims unverified).
 
+## 2026-10-25 User leak checks: unplug, power off, rate change
+
+- User: no leak when unplugging or powering off the BTR17 or changing the rate while relaying. Notification sounds not tested.
+- Log of the user's run (Apple Music, 09:04 to 09:05): unplug -> detach path, player stopped after 110 ms, then unmuted. Each live rate change (96 -> 44.1 -> 48 kHz): reopening the capture re-evaluated the route while the target played, so the media output left the speaker; the hold paused the target, and it came back by itself about 3.4 s later ("back on the speaker by itself; resumed"). So a rate change now costs about 3.5 s of silence instead of about 1.2 s; pausing the target inside `switchRate` would keep the route on the speaker (not done, offered to the user).
+
 ## 2026-10-25 Version 0.1.1
 
 - Listening test (user): relay start, three track changes and one lock-sound re-pin (player log unmuted windows 15, 6, 12, 10, 0 ms): no leak heard on the phone speaker. With the stop test, every leak point of the defined flow is checked except a DAC unplug while relaying and a rate change.
